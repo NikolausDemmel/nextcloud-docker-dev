@@ -17,3 +17,8 @@ node_modules/
 /.idea/
 .DS_Store
 .claude/
+
+# Local development
+data/apps-extra/
+config_stable*.php
+*.tar.gz

@@ -118,6 +118,8 @@ docker compose exec -u 33 stable31 php occ config:system:get apps_paths
 
 The actual config is in Docker volumes at `/var/www/html/config/config.php` inside each container.
 
+**Note:** You may find `config_stable*.php` files in the repository root - these are reference files used to copy configuration in/out of containers during testing. They are gitignored and not part of the running setup.
+
 #### Editing Configuration
 
 **Option 1: Edit inside container (recommended)**
