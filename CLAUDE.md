@@ -196,6 +196,143 @@ docker compose exec -u 33 stable26 php occ upgrade
 DOCKER_SOCKET=/run/user/1000/docker.sock
 ```
 
+## Database Backup & Restore
+
+Useful for testing database migrations or other destructive operations.
+
+### Backup Database
+
+```bash
+# Backup specific database (e.g., stable31)
+docker compose exec database-mysql mysqldump -u root -pnextcloud stable31 > backup_stable31.sql
+
+# Backup all databases
+docker compose exec database-mysql mysqldump -u root -pnextcloud --all-databases > backup_all.sql
+```
+
+### Restore Database
+
+```bash
+# Restore specific database
+docker compose exec -i database-mysql mysql -u root -pnextcloud stable31 < backup_stable31.sql
+
+# Restore all databases
+docker compose exec -i database-mysql mysql -u root -pnextcloud < backup_all.sql
+```
+
+### Testing Migrations Safely
+
+```bash
+# 1. Create backup before migration
+docker compose exec database-mysql mysqldump -u root -pnextcloud stable31 > backup_before_migration.sql
+
+# 2. Test migration (e.g., enable plugin with new migration)
+docker compose exec -u 33 stable31 php occ app:enable user_vo
+docker compose exec -u 33 stable31 php occ migrations:status user_vo
+
+# 3. If migration fails or you want to revert:
+docker compose exec -i database-mysql mysql -u root -pnextcloud stable31 < backup_before_migration.sql
+docker compose exec -u 33 stable31 php occ maintenance:repair
+
+# 4. Try migration again after fixing issues
+docker compose exec -u 33 stable31 php occ app:enable user_vo
+```
+
+**Notes:**
+- Each Nextcloud version uses its own database (e.g., `stable31`, `stable30`)
+- Each version also has its own data volume (user files, created timestamps, etc.)
+- MySQL root password is `nextcloud` (insecure dev setup)
+- The `-i` flag is required for restore (stdin redirect)
+- Backups are stored on host filesystem and persist after container restarts
+- Database restore restores: user accounts, settings, shares, permissions
+- Database restore does NOT restore: user files, data directory timestamps
+
+### Backup Data Volume (User Files)
+
+For a complete backup including user files and created timestamps:
+
+```bash
+# 1. Get the data volume name for your version
+VOLUME_NAME=$(docker inspect master-stable31-1 --format '{{range .Mounts}}{{if eq .Destination "/var/www/html/data"}}{{.Name}}{{end}}{{end}}')
+
+# 2a. Full backup (includes profiler data and old logs, ~250MB)
+docker run --rm \
+  -v $VOLUME_NAME:/data \
+  -v $(pwd)/backups:/backup \
+  alpine tar czf /backup/stable31_data_full.tar.gz -C /data .
+
+# 2b. Clean backup (excludes profiler and old logs, ~110MB - recommended)
+docker run --rm \
+  -v $VOLUME_NAME:/data \
+  -v $(pwd)/backups:/backup \
+  alpine tar czf /backup/stable31_data_clean.tar.gz \
+    --exclude='__profiler' \
+    --exclude='*.log.*' \
+    --exclude='*.log.bak' \
+    -C /data .
+```
+
+**What gets excluded:**
+- **Full backup (244MB):** Nothing (complete snapshot)
+- **Clean backup (110MB):** `__profiler` directory (~150MB profiling data), old log files (~170MB)
+
+**What's in the 110MB clean backup:**
+- User files (~100MB): Welcome files, demo PDFs, user data (5 users × ~20MB)
+- App data (~22MB): Cached files, previews, temporary data
+- Database files, configs, current logs (~minimal)
+
+### Restore Data Volume
+
+```bash
+# 1. Stop the container first
+docker compose stop stable31
+
+# 2. Restore the data volume
+VOLUME_NAME=$(docker inspect master-stable31-1 --format '{{range .Mounts}}{{if eq .Destination "/var/www/html/data"}}{{.Name}}{{end}}{{end}}')
+docker run --rm \
+  -v $VOLUME_NAME:/data \
+  -v $(pwd):/backup \
+  alpine sh -c "cd /data && tar xzf /backup/stable31_data_backup.tar.gz"
+
+# 3. Restart the container
+docker compose up -d stable31
+```
+
+### Complete Backup/Restore (Database + Files)
+
+For testing migrations that might affect both database and files:
+
+```bash
+# === BACKUP ===
+# Database
+docker compose exec database-mysql mysqldump -u root -pnextcloud stable31 > backup_db.sql
+
+# Data volume
+VOLUME_NAME=$(docker inspect master-stable31-1 --format '{{range .Mounts}}{{if eq .Destination "/var/www/html/data"}}{{.Name}}{{end}}{{end}}')
+docker run --rm -v $VOLUME_NAME:/data -v $(pwd):/backup alpine tar czf /backup/backup_data.tar.gz -C /data .
+
+# === RESTORE ===
+# Database
+docker compose exec -i database-mysql mysql -u root -pnextcloud stable31 < backup_db.sql
+
+# Data volume (stop container first!)
+docker compose stop stable31
+docker run --rm -v $VOLUME_NAME:/data -v $(pwd):/backup alpine sh -c "cd /data && tar xzf /backup/backup_data.tar.gz"
+docker compose up -d stable31
+
+# Verify
+docker compose exec -u 33 stable31 php occ status
+```
+
+**What gets backed up:**
+- **Database:** User accounts, settings, app config, shares, permissions, groups
+- **Data volume:** User files, avatars, app data, logs, created/modified timestamps
+
+**Performance notes:**
+- Database backup: ~500KB, takes <1 second
+- Data volume backup: ~250MB, takes ~5-10 seconds (depends on user files)
+- For migration testing, database-only backup is usually sufficient
+
 ## Testing Plugin Releases
 
 To test a built appstore package locally:
