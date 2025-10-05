@@ -287,16 +287,19 @@ docker run --rm \
 # 1. Stop the container first
 docker compose stop stable31
 
-# 2. Restore the data volume
+# 2. Restore the data volume (with -p to preserve permissions)
 VOLUME_NAME=$(docker inspect master-stable31-1 --format '{{range .Mounts}}{{if eq .Destination "/var/www/html/data"}}{{.Name}}{{end}}{{end}}')
 docker run --rm \
   -v $VOLUME_NAME:/data \
-  -v $(pwd):/backup \
-  alpine sh -c "cd /data && tar xzf /backup/stable31_data_backup.tar.gz"
+  -v $(pwd)/backups/2025-10-05_stable31_baseline_before_user_sync:/backup \
+  alpine sh -c "cd /data && rm -rf * .* 2>/dev/null; tar xzpf /backup/stable31_baseline_data_clean.tar.gz"
 
 # 3. Restart the container
 docker compose up -d stable31
 ```
+
+⚠️ **Known limitation:** Directory timestamps may not be fully preserved during restore due to Alpine tar behavior.
+For testing database migrations, database-only backup/restore is usually sufficient.
 
 ### Complete Backup/Restore (Database + Files)
 
