@@ -61,6 +61,16 @@ docker compose exec -u 33 stable31 php occ app:disable user_vo
 
 # Clear caches
 docker compose exec -u 33 stable31 php occ maintenance:repair
+
+# Background jobs (cron)
+docker compose exec -u 33 stable31 php occ background:job:list
+docker compose exec -u 33 stable31 php occ background:job:execute <job-id>
+docker compose exec -u 33 stable31 php occ background:job:execute <job-id> --force-execute
+
+# App config (key-value storage)
+docker compose exec -u 33 stable31 php occ config:app:get user_vo <key>
+docker compose exec -u 33 stable31 php occ config:app:set user_vo <key> --value="<value>"
+docker compose exec -u 33 stable31 php occ config:app:delete user_vo <key>
 ```
 
 ### Viewing Logs
@@ -149,6 +159,81 @@ rm ./temp_config.php
 ```
 
 Changes take effect immediately - no restart needed.
+
+### Background Jobs (Cron)
+
+Nextcloud uses background jobs for scheduled tasks. In development, you can manage and test them manually:
+
+**List all background jobs:**
+```bash
+docker compose exec -u 33 stable31 php occ background:job:list
+```
+
+**Execute a specific job (waits for next scheduled time):**
+```bash
+docker compose exec -u 33 stable31 php occ background:job:execute <job-id>
+```
+
+**Force execute immediately:**
+```bash
+docker compose exec -u 33 stable31 php occ background:job:execute <job-id> --force-execute
+```
+
+**Example - Testing nightly sync for user_vo plugin:**
+```bash
+# 1. Find the job ID
+docker compose exec -u 33 stable31 php occ background:job:list | grep SyncUsersJob
+
+# 2. Enable nightly sync (if not already)
+docker compose exec -u 33 stable31 php occ config:app:set user_vo enable_nightly_sync --value="true"
+
+# 3. Force execute the job
+docker compose exec -u 33 stable31 php occ background:job:execute 206 --force-execute
+
+# 4. Check execution status
+docker compose exec -u 33 stable31 php occ config:app:get user_vo nightly_sync_last_status
+docker compose exec -u 33 stable31 php occ config:app:get user_vo nightly_sync_last_run
+docker compose exec -u 33 stable31 php occ config:app:get user_vo nightly_sync_last_summary
+
+# 5. Disable again if needed
+docker compose exec -u 33 stable31 php occ config:app:set user_vo enable_nightly_sync --value="false"
+```
+
+**Notes:**
+- Background jobs run automatically in production via system cron
+- In development, Nextcloud's AJAX/webcron executes jobs periodically
+- Use `--force-execute` to bypass the schedule and run immediately
+- Job execution times and results are logged in Nextcloud logs
+
+### App Configuration (Key-Value Storage)
+
+Many plugins use Nextcloud's app config system for settings. You can inspect and modify these via OCC:
+
+**Get a config value:**
+```bash
+docker compose exec -u 33 stable31 php occ config:app:get user_vo <key>
+```
+
+**Set a config value:**
+```bash
+docker compose exec -u 33 stable31 php occ config:app:set user_vo <key> --value="<value>"
+```
+
+**Delete a config value:**
+```bash
+docker compose exec -u 33 stable31 php occ config:app:delete user_vo <key>
+```
+
+**List all config for an app:**
+```bash
+docker compose exec -u 33 stable31 php occ config:list user_vo
+```
+
+**Common user_vo config keys:**
+- `api_url`, `api_username`, `api_password` - API credentials
+- `sync_email`, `sync_photo` - Sync settings
+- `enable_nightly_sync` - Background job toggle
+- `nightly_sync_last_run`, `nightly_sync_last_status`, `nightly_sync_last_summary` - Execution tracking
 
 ## Adding New Nextcloud Versions
 
