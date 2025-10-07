@@ -81,7 +81,46 @@ docker compose exec -u 33 stable31 tail -n 30 /var/www/html/data/nextcloud.log
 
 # Search for specific entries
 docker compose exec -u 33 stable31 grep 'user_vo' /var/www/html/data/nextcloud.log
+
+# Follow logs in real-time
+docker compose exec -u 33 stable31 tail -f /var/www/html/data/nextcloud.log
+
+# Filter for specific app
+docker compose exec -u 33 stable31 tail -f /var/www/html/data/nextcloud.log | grep 'user_vo'
 ```
+
+### Log Level Configuration
+
+Nextcloud supports multiple log levels (0=Debug, 1=Info, 2=Warning, 3=Error, 4=Fatal). For plugin development, you often need debug-level logging.
+
+**View current log level:**
+```bash
+docker compose exec -u 33 stable31 php occ config:system:get loglevel
+```
+
+**Set log level to Debug (0) for development:**
+```bash
+docker compose exec -u 33 stable31 php occ config:system:set loglevel --value=0 --type=integer
+```
+
+**Reset to Warning (2) for normal use:**
+```bash
+docker compose exec -u 33 stable31 php occ config:system:set loglevel --value=2 --type=integer
+```
+
+**Log Levels:**
+- `0` - **Debug**: Verbose output, includes all debug statements from plugins
+- `1` - **Info**: Informational messages (still quite verbose)
+- `2` - **Warning**: Default level, only warnings and errors
+- `3` - **Error**: Only errors and fatal issues
+- `4` - **Fatal**: Only fatal errors
+
+**Development Best Practices:**
+- Use Debug (0) when actively debugging a feature
+- Use Warning (2) for normal development work
+- Be aware that Debug level can generate large log files quickly
+- Consider filtering logs by app name to reduce noise: `tail -f nextcloud.log | grep 'user_vo'`
+- Changes take effect immediately (no restart needed)
 
 ## Plugin Development
 
