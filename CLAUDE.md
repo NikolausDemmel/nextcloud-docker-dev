@@ -507,6 +507,41 @@ The docker-compose setup includes:
 - Collabora, OnlyOffice for document editing
 - Blackfire, Xdebug for profiling/debugging
 
+## Troubleshooting
+
+### Disable Blackfire Warnings
+
+The development environment includes Blackfire profiling support, but if the Blackfire service is not configured or running, PHP generates frequent warnings in logs:
+
+```
+php_network_getaddresses: getaddrinfo for blackfire failed: Name or service not known
+```
+
+**To disable these warnings:**
+
+```bash
+# Disable Blackfire extension
+docker compose exec stable31 mv /usr/local/etc/php/conf.d/docker-php-ext-blackfire.ini /usr/local/etc/php/conf.d/docker-php-ext-blackfire.ini.disabled
+
+# Restart container to apply changes
+docker compose restart stable31
+
+# Verify extension is disabled (should return empty)
+docker compose exec stable31 php -m | grep -i blackfire
+```
+
+**To re-enable Blackfire later:**
+
+```bash
+# Re-enable extension
+docker compose exec stable31 mv /usr/local/etc/php/conf.d/docker-php-ext-blackfire.ini.disabled /usr/local/etc/php/conf.d/docker-php-ext-blackfire.ini
+
+# Restart container
+docker compose restart stable31
+```
+
+**Note:** This change persists only until the container is recreated. To permanently disable Blackfire, modify the Dockerfile or docker-compose configuration.
+
 ## References
 
 - [nextcloud-docker-dev documentation](https://juliusknorr.github.io/nextcloud-docker-dev/)
