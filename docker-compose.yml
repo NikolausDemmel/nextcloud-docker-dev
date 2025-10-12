@@ -40,6 +40,7 @@ services:
           - stable29${DOMAIN_SUFFIX}
           - stable30${DOMAIN_SUFFIX}
           - stable31${DOMAIN_SUFFIX}
+          - stable32${DOMAIN_SUFFIX}
           - mail${DOMAIN_SUFFIX}
           - sso${DOMAIN_SUFFIX}
           - imap${DOMAIN_SUFFIX}
@@ -73,7 +74,7 @@ services:
       - ./docker/configs/haproxy.conf:/usr/local/etc/haproxy/haproxy.cfg:ro
 
   nextcloud:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: ${NEXTCLOUD_AUTOINSTALL:-YES}
@@ -105,7 +106,7 @@ services:
       - host.docker.internal:host-gateway
 
   nextcloud2:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: 'mysql'
       VIRTUAL_HOST: "nextcloud2${DOMAIN_SUFFIX}"
@@ -131,7 +132,7 @@ services:
       - host.docker.internal:host-gateway
 
   nextcloud3:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       VIRTUAL_HOST: "nextcloud3${DOMAIN_SUFFIX}"
@@ -420,7 +421,7 @@ services:
       - host.docker.internal:host-gateway
 
   stable25:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
@@ -450,7 +451,7 @@ services:
       - host.docker.internal:host-gateway
 
   stable26:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
@@ -480,7 +481,7 @@ services:
       - host.docker.internal:host-gateway
 
   stable27:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
@@ -510,7 +511,7 @@ services:
       - host.docker.internal:host-gateway
 
   stable28:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
@@ -540,7 +541,7 @@ services:
       - host.docker.internal:host-gateway
 
   stable29:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
@@ -570,7 +571,7 @@ services:
       - host.docker.internal:host-gateway
 
   stable30:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
@@ -600,7 +601,7 @@ services:
       - host.docker.internal:host-gateway
 
   stable31:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
@@ -614,6 +615,36 @@ services:
     volumes:
       - '${STABLE_ROOT_PATH}/stable31:/var/www/html'
       - '${STABLE_ROOT_PATH}/stable31/apps-extra:/var/www/html/apps-extra'
+      - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-shared'
+      - /var/www/html/data
+      - /var/www/html/config
+      - /var/www/html/apps-writable
+      - ./data/skeleton/:/skeleton
+      - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
+      - ./data/shared:/shared
+    depends_on:
+      - database-${SQL:-mysql}
+      - redis
+      - mail
+      - ${PROXY_SERVICE:-proxy}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  stable32:
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    environment:
+      SQL: ${SQL:-mysql}
+      NEXTCLOUD_AUTOINSTALL: "YES"
+      NEXTCLOUD_AUTOINSTALL_APPS:
+      WITH_REDIS: "YES"
+      VIRTUAL_HOST: stable32${DOMAIN_SUFFIX}
+      ADDITIONAL_APPS_PATH:
+      NEXTCLOUD_TRUSTED_DOMAINS:
+      PRIMARY: ${PRIMARY:-local}
+      PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
+    volumes:
+      - '${STABLE_ROOT_PATH}/stable32:/var/www/html'
+      - '${STABLE_ROOT_PATH}/stable32/apps-extra:/var/www/html/apps-extra'
       - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-shared'
       - /var/www/html/data
       - /var/www/html/config
@@ -830,6 +861,7 @@ services:
       aliasgroup10: http://stable29${DOMAIN_SUFFIX}
       aliasgroup11: http://stable30${DOMAIN_SUFFIX}
       aliasgroup12: http://stable31${DOMAIN_SUFFIX}
+      aliasgroup13: http://stable32${DOMAIN_SUFFIX}
       dictionaries: de_DE en_US en_GB
       username: admin
       password: admin
@@ -944,7 +976,7 @@ services:
       - clam:/var/lib/clamav
 
   portal:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       VIRTUAL_HOST: portal${DOMAIN_SUFFIX}
       SQL: 'mysql'
@@ -966,7 +998,7 @@ services:
       - host.docker.internal:host-gateway
 
   gs1:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       VIRTUAL_HOST: gs1${DOMAIN_SUFFIX}
       SQL: 'mysql'
@@ -989,7 +1021,7 @@ services:
       - host.docker.internal:host-gateway
 
   gs2:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-81}:latest
+    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       VIRTUAL_HOST: gs2${DOMAIN_SUFFIX}
       SQL: 'mysql'
