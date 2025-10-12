@@ -509,22 +509,19 @@ The docker-compose setup includes:
 
 ## Troubleshooting
 
-### Disable Blackfire Warnings
+### Blackfire Warnings
 
-The development environment includes Blackfire profiling support, but if the Blackfire service is not configured or running, PHP generates frequent warnings in logs:
+**Issue:** The development environment includes Blackfire profiling support, but the published Docker images have Blackfire enabled by default (even though the repository Dockerfile disables it). If the Blackfire service is not configured or running, PHP generates frequent warnings in logs:
 
 ```
 php_network_getaddresses: getaddrinfo for blackfire failed: Name or service not known
 ```
 
-**To disable these warnings:**
+**Temporary fix (persists until container recreate):**
 
 ```bash
-# Disable Blackfire extension
-docker compose exec stable31 mv /usr/local/etc/php/conf.d/docker-php-ext-blackfire.ini /usr/local/etc/php/conf.d/docker-php-ext-blackfire.ini.disabled
-
-# Restart container to apply changes
-docker compose restart stable31
+# Use the provided script to disable Blackfire
+./scripts/php-mod-config stable31 blackfire off
 
 # Verify extension is disabled (should return empty)
 docker compose exec stable31 php -m | grep -i blackfire
@@ -533,14 +530,28 @@ docker compose exec stable31 php -m | grep -i blackfire
 **To re-enable Blackfire later:**
 
 ```bash
-# Re-enable extension
-docker compose exec stable31 mv /usr/local/etc/php/conf.d/docker-php-ext-blackfire.ini.disabled /usr/local/etc/php/conf.d/docker-php-ext-blackfire.ini
-
-# Restart container
-docker compose restart stable31
+./scripts/php-mod-config stable31 blackfire on
 ```
 
-**Note:** This change persists only until the container is recreated. To permanently disable Blackfire, modify the Dockerfile or docker-compose configuration.
+**Important:** This fix does NOT persist when you recreate containers with `docker compose up -d --force-recreate`. You'll need to run the disable command again after recreation.
+
+**Permanent solution:** This is a known issue with the published Docker images. See upstream issue: https://github.com/juliusknorr/nextcloud-docker-dev/issues/421
+
+### Docker Compose PROTOCOL Warnings
+
+**Issue:** When running docker compose commands, you may see warnings like:
+
+```
+level=warning msg="The \"PROTOCOL\" variable is not set. Defaulting to a blank string."
+```
+
+**Fix:** Add the PROTOCOL variable to your `.env` file:
+
+```bash
+echo 'PROTOCOL=http' >> .env
+```
+
+This suppresses the warnings. Use `https` if you've configured SSL certificates.
 
 ## References
 
