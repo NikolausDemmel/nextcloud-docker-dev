@@ -274,6 +274,81 @@ docker compose exec -u 33 stable31 php occ config:list user_vo
 - `enable_nightly_sync` - Background job toggle
 - `nightly_sync_last_run`, `nightly_sync_last_status`, `nightly_sync_last_summary` - Execution tracking
 
+### Testing Plugin APIs
+
+You can test plugin API endpoints directly using curl, similar to testing other Nextcloud apps:
+
+**Basic API Request Pattern:**
+```bash
+curl -H "OCS-APIRequest: true" -u admin:admin -X GET \
+  http://stable31.local/apps/user_vo/admin/<endpoint>
+```
+
+**Examples for user_vo plugin:**
+
+```bash
+# Fetch all managed groups
+curl -H "OCS-APIRequest: true" -u admin:admin -X GET \
+  http://stable31.local/apps/user_vo/admin/fetch-managed-groups | jq '.'
+
+# Fetch all VO groups
+curl -H "OCS-APIRequest: true" -u admin:admin -X GET \
+  http://stable31.local/apps/user_vo/admin/fetch-all-vo-groups | jq '.'
+
+# Search for a specific group
+curl -H "OCS-APIRequest: true" -u admin:admin -X GET \
+  http://stable31.local/apps/user_vo/admin/fetch-managed-groups | \
+  jq -r '.groups[] | select(.vo_group_name | contains("Test")) | {vo_group_name, vo_parent_id, vo_position, vo_position_index}'
+
+# Sync a specific group (POST with JSON body)
+curl -H "OCS-APIRequest: true" -u admin:admin -X POST \
+  http://stable31.local/apps/user_vo/admin/sync-group \
+  -H "Content-Type: application/json" \
+  -d '{"vo_group_id": "5358"}' | jq '.'
+
+# Test configuration
+curl -H "OCS-APIRequest: true" -u admin:admin -X POST \
+  http://stable31.local/apps/user_vo/admin/test-config \
+  -H "Content-Type: application/json" \
+  -d '{}' | jq '.'
+```
+
+**Helper Script:**
+
+A test script `test_api.sh` is available in the repository root for common operations:
+
+```bash
+# List all managed groups
+./test_api.sh managed
+
+# List all VO groups
+./test_api.sh all
+
+# Search for a specific group
+./test_api.sh search "Test 3"
+
+# Sync a specific group
+./test_api.sh sync 5358
+```
+
+**API Endpoints Reference:**
+
+See `data/apps-extra/user_vo/appinfo/routes.php` for all available endpoints. Common ones:
+- `GET /admin/fetch-managed-groups` - List groups synced to Nextcloud
+- `GET /admin/fetch-all-vo-groups` - List all groups from VereinOnline
+- `POST /admin/sync-group` - Sync members for a specific group
+- `POST /admin/create-group` - Create NC group from VO group
+- `POST /admin/delete-group` - Delete NC group
+- `GET /admin/config-status` - Check configuration status
+- `POST /admin/test-config` - Test VO API connection
+
+**Notes:**
+- `OCS-APIRequest: true` header is required for Nextcloud API requests
+- Default credentials are `admin:admin` (insecure dev setup)
+- Use `jq` for JSON formatting and filtering
+- POST endpoints typically require JSON body with `Content-Type: application/json`
+- API responses are JSON format
+
 ## Adding New Nextcloud Versions
 
 To create a test environment for a new Nextcloud version:
