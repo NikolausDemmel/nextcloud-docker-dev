@@ -3,7 +3,7 @@ services:
   # Proxy for ssl termination and easier hostname access
   # SSL certificates with the virtual host name need to be added to ./data/ssl
   proxy:
-    image: ghcr.io/juliusknorr/nextcloud-dev-nginx:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-nginx:latest
     ports:
       - "${IP_BIND:-127.0.0.1}:${PROXY_PORT_HTTP:-80}:80"
       - "${IP_BIND:-127.0.0.1}:${PROXY_PORT_HTTPS:-443}:443"
@@ -41,8 +41,12 @@ services:
           - stable30${DOMAIN_SUFFIX}
           - stable31${DOMAIN_SUFFIX}
           - stable32${DOMAIN_SUFFIX}
+          - stable33${DOMAIN_SUFFIX}
+          - stable34${DOMAIN_SUFFIX}
           - mail${DOMAIN_SUFFIX}
           - sso${DOMAIN_SUFFIX}
+          - minio${DOMAIN_SUFFIX}
+          - rustfs${DOMAIN_SUFFIX}
           - imap${DOMAIN_SUFFIX}
           - collabora${DOMAIN_SUFFIX}
           - codedev${DOMAIN_SUFFIX}
@@ -54,6 +58,7 @@ services:
           - portal${DOMAIN_SUFFIX}
           - gs1${DOMAIN_SUFFIX}
           - gs2${DOMAIN_SUFFIX}
+          - gs3${DOMAIN_SUFFIX}
           - lookup${DOMAIN_SUFFIX}
           - elasticsearch${DOMAIN_SUFFIX}
           - elasticsearch-ui${DOMAIN_SUFFIX}
@@ -61,6 +66,7 @@ services:
           - phpmyadmin${DOMAIN_SUFFIX}
           - talk-signaling${DOMAIN_SUFFIX}
           - talk-recording${DOMAIN_SUFFIX}
+          - authentik${DOMAIN_SUFFIX}
     extra_hosts:
       - host.docker.internal:host-gateway
 
@@ -74,13 +80,14 @@ services:
       - ./docker/configs/haproxy.conf:/usr/local/etc/haproxy/haproxy.cfg:ro
 
   nextcloud:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-85}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: ${NEXTCLOUD_AUTOINSTALL:-YES}
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: "nextcloud${DOMAIN_SUFFIX}"
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       BLACKFIRE_CLIENT_ID:
@@ -106,10 +113,11 @@ services:
       - host.docker.internal:host-gateway
 
   nextcloud2:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-85}:latest
     environment:
-      SQL: 'mysql'
+      SQL: ${SQL:-mysql}
       VIRTUAL_HOST: "nextcloud2${DOMAIN_SUFFIX}"
+      PROTOCOL: ${PROTOCOL:-https}
       PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
     volumes:
       - '${REPO_PATH_SERVER}:/var/www/html'
@@ -132,10 +140,11 @@ services:
       - host.docker.internal:host-gateway
 
   nextcloud3:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-85}:latest
     environment:
       SQL: ${SQL:-mysql}
       VIRTUAL_HOST: "nextcloud3${DOMAIN_SUFFIX}"
+      PROTOCOL: ${PROTOCOL:-https}
       PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
     volumes:
       - '${REPO_PATH_SERVER}:/var/www/html'
@@ -156,13 +165,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable16:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-73}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-73}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable16${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
@@ -185,13 +195,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable17:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-73}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-73}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable17${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
@@ -214,13 +225,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable18:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-74}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-74}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable18${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
@@ -243,13 +255,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable19:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-74}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-74}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable19${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
@@ -272,13 +285,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable20:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-74}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-74}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable20${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
@@ -301,13 +315,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable21:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-80}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-80}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable21${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -331,13 +346,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable22:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-80}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-80}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable22${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -361,13 +377,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable23:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-80}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-80}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable23${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -391,13 +408,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable24:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-80}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-80}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable24${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -421,13 +439,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable25:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable25${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -451,13 +470,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable26:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable26${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -481,13 +501,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable27:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable27${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -511,13 +532,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable28:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable28${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -541,13 +563,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable29:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable29${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -571,13 +594,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable30:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable30${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -601,13 +625,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable31:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable31${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -631,13 +656,14 @@ services:
       - host.docker.internal:host-gateway
 
   stable32:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       SQL: ${SQL:-mysql}
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
       VIRTUAL_HOST: stable32${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
       PRIMARY: ${PRIMARY:-local}
@@ -660,8 +686,70 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
 
+  stable33:
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-83}:latest
+    environment:
+      SQL: ${SQL:-mysql}
+      NEXTCLOUD_AUTOINSTALL: "YES"
+      NEXTCLOUD_AUTOINSTALL_APPS:
+      WITH_REDIS: "YES"
+      VIRTUAL_HOST: stable33${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
+      ADDITIONAL_APPS_PATH:
+      NEXTCLOUD_TRUSTED_DOMAINS:
+      PRIMARY: ${PRIMARY:-local}
+      PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
+    volumes:
+      - '${STABLE_ROOT_PATH}/stable33:/var/www/html'
+      - '${STABLE_ROOT_PATH}/stable33/apps-extra:/var/www/html/apps-extra'
+      - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-shared'
+      - /var/www/html/data
+      - /var/www/html/config
+      - /var/www/html/apps-writable
+      - ./data/skeleton/:/skeleton
+      - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
+      - ./data/shared:/shared
+    depends_on:
+      - database-${SQL:-mysql}
+      - redis
+      - mail
+      - ${PROXY_SERVICE:-proxy}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  stable34:
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-83}:latest
+    environment:
+      SQL: ${SQL:-mysql}
+      NEXTCLOUD_AUTOINSTALL: "YES"
+      NEXTCLOUD_AUTOINSTALL_APPS:
+      WITH_REDIS: "YES"
+      VIRTUAL_HOST: stable34${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
+      ADDITIONAL_APPS_PATH:
+      NEXTCLOUD_TRUSTED_DOMAINS:
+      PRIMARY: ${PRIMARY:-local}
+      PHP_XDEBUG_MODE: ${PHP_XDEBUG_MODE:-develop}
+    volumes:
+      - '${STABLE_ROOT_PATH}/stable34:/var/www/html'
+      - '${STABLE_ROOT_PATH}/stable34/apps-extra:/var/www/html/apps-extra'
+      - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-shared'
+      - /var/www/html/data
+      - /var/www/html/config
+      - /var/www/html/apps-writable
+      - ./data/skeleton/:/skeleton
+      - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
+      - ./data/shared:/shared
+    depends_on:
+      - database-${SQL:-mysql}
+      - redis
+      - mail
+      - ${PROXY_SERVICE:-proxy}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
   database-sqlite:
-    image: rwgrim/docker-noop
+    image: ghcr.io/nextcloud/nextcloud-dev-noop:latest
 
   database-mysql:
     image: mariadb:10.6
@@ -780,6 +868,7 @@ services:
       PMA_HOST: database-mysql
       PMA_USER: root
       PMA_PASSWORD: nextcloud
+      UPLOAD_LIMIT: 512M
 
   ldapadmin:
     image: osixia/phpldapadmin
@@ -790,7 +879,7 @@ services:
       - "${IP_BIND:-127.0.0.1}:${PORTBASE:-800}8:80"
 
   saml:
-    image: unicon/simplesamlphp
+    image: unicon/simplesamlphp 
     volumes:
       - ./docker/configs/var-simplesamlphp/config:/var/simplesamlphp/config
       - ./docker/configs/var-simplesamlphp/cert:/var/simplesamlphp/cert
@@ -801,7 +890,7 @@ services:
       - 80
 
   mail:
-    image: ghcr.io/juliusknorr/nextcloud-dev-mailhog:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-mailhog:latest
     environment:
       VIRTUAL_HOST: "mail${DOMAIN_SUFFIX}"
       VIRTUAL_PORT: 8025
@@ -852,16 +941,19 @@ services:
       aliasgroup1: http://nextcloud${DOMAIN_SUFFIX}
       aliasgroup2: http://gs1${DOMAIN_SUFFIX}
       aliasgroup3: http://gs2${DOMAIN_SUFFIX}
-      aliasgroup4: http://stable20${DOMAIN_SUFFIX}
-      aliasgroup5: http://stable24${DOMAIN_SUFFIX}
-      aliasgroup6: http://stable25${DOMAIN_SUFFIX}
-      aliasgroup7: http://stable26${DOMAIN_SUFFIX}
-      aliasgroup8: http://stable27${DOMAIN_SUFFIX}
-      aliasgroup9: http://stable28${DOMAIN_SUFFIX}
-      aliasgroup10: http://stable29${DOMAIN_SUFFIX}
-      aliasgroup11: http://stable30${DOMAIN_SUFFIX}
-      aliasgroup12: http://stable31${DOMAIN_SUFFIX}
-      aliasgroup13: http://stable32${DOMAIN_SUFFIX}
+      aliasgroup4: http://gs3${DOMAIN_SUFFIX}
+      aliasgroup5: http://stable20${DOMAIN_SUFFIX}
+      aliasgroup6: http://stable24${DOMAIN_SUFFIX}
+      aliasgroup7: http://stable25${DOMAIN_SUFFIX}
+      aliasgroup8: http://stable26${DOMAIN_SUFFIX}
+      aliasgroup9: http://stable27${DOMAIN_SUFFIX}
+      aliasgroup10: http://stable28${DOMAIN_SUFFIX}
+      aliasgroup11: http://stable29${DOMAIN_SUFFIX}
+      aliasgroup12: http://stable30${DOMAIN_SUFFIX}
+      aliasgroup13: http://stable31${DOMAIN_SUFFIX}
+      aliasgroup14: http://stable32${DOMAIN_SUFFIX}
+      aliasgroup15: http://stable33${DOMAIN_SUFFIX}
+      aliasgroup16: http://stable34${DOMAIN_SUFFIX}
       dictionaries: de_DE en_US en_GB
       username: admin
       password: admin
@@ -899,13 +991,26 @@ services:
     image: minio/minio
     environment:
       VIRTUAL_HOST: minio${DOMAIN_SUFFIX}
-      VIRTUAL_PORT: 9001
+      VIRTUAL_PORT: 9000
       MINIO_ROOT_USER: nextcloud
       MINIO_ROOT_PASSWORD: nextcloud
       MINIO_BROWSER_REDIRECT_URL: ${PROTOCOL}://minio${DOMAIN_SUFFIX}
+    ports:
+      - "9001:9001"
     volumes:
       - objectstorage_minio:/data
     command: server /data --console-address :9001
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    environment:
+      VIRTUAL_HOST: rustfs${DOMAIN_SUFFIX}
+      VIRTUAL_PORT: 9001
+      RUSTFS_ACCESS_KEY: nextcloud
+      RUSTFS_SECRET_KEY: nextcloud
+      RUSTFS_CONSOLE_ENABLE: "true"
+    volumes:
+      - objectstorage_rustfs:/data
 
   elasticsearch:
     build:
@@ -944,7 +1049,7 @@ services:
 
 
   push:
-    image: ghcr.io/juliusknorr/nextcloud-dev-push:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-push:latest
     environment:
       RUST_LOG: debug
       VIRTUAL_HOST: push${DOMAIN_SUFFIX}
@@ -954,40 +1059,46 @@ services:
       NEXTCLOUD_URL: http://nextcloud
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.1
+    image: ghcr.io/nextcloud/nextcloud-dev-keycloak:latest
     expose:
       - 8080
-    volumes:
-      - ./docker/configs/keycloak:/opt/keycloak/data/import
-    command: start-dev --import-realm
+    # volumes:
+      # - ./docker/configs/keycloak:/opt/keycloak/data/import
+    command: start-dev --import-realm --http-enabled=true --proxy-headers xforwarded
     environment:
+      PROTOCOL: "${PROTOCOL:-http}"
+      DOMAIN_SUFFIX: "${DOMAIN_SUFFIX:-.local}"
       VIRTUAL_HOST: "keycloak${DOMAIN_SUFFIX}"
       VIRTUAL_PORT: 8080
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      PROXY_ADDRESS_FORWARDING: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KEYCLOAK_PROXY_ADDRESS_FORWARDING: "true"
+      KEYCLOAK_FRONTEND_URL: "${PROTOCOL:-http}://keycloak${DOMAIN_SUFFIX}"
       KC_PROXY: edge
 
   av:
-    image: mkodockx/docker-clamav:alpine
+    image: clamav/clamav:stable
     container_name: nextav
     restart: unless-stopped
     volumes:
       - clam:/var/lib/clamav
 
   portal:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
       VIRTUAL_HOST: portal${DOMAIN_SUFFIX}
       SQL: 'mysql'
       GS_MODE: master
+      PROTOCOL: ${PROTOCOL:-https}
     volumes:
-      - '${STABLE_ROOT_PATH}/server:/var/www/html'
-      - '${STABLE_ROOT_PATH}/server/apps-extra:/var/www/html/apps-extra'
+      - '${REPO_PATH_SERVER}:/var/www/html'
+      - '${REPO_PATH_SERVER}/apps-extra:/var/www/html/apps-extra'
+      - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-shared'
       - /var/www/html/data
       - /var/www/html/config
       - ./data/skeleton/:/skeleton
       - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
+      - ./data/shared:/shared
     depends_on:
       - ${PROXY_SERVICE:-proxy}
       - database-${SQL:-mysql}
@@ -998,18 +1109,25 @@ services:
       - host.docker.internal:host-gateway
 
   gs1:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
-      VIRTUAL_HOST: gs1${DOMAIN_SUFFIX}
       SQL: 'mysql'
+      NEXTCLOUD_AUTOINSTALL: ${NEXTCLOUD_AUTOINSTALL:-YES}
+      NEXTCLOUD_AUTOINSTALL_APPS:
+      VIRTUAL_HOST: gs1${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
+      ADDITIONAL_APPS_PATH:
+      NEXTCLOUD_TRUSTED_DOMAINS:
       GS_MODE: slave
     volumes:
-      - '${STABLE_ROOT_PATH}/server:/var/www/html'
-      - '${STABLE_ROOT_PATH}/server/apps-extra:/var/www/html/apps-extra'
+      - '${REPO_PATH_SERVER}:/var/www/html'
+      - '${REPO_PATH_SERVER}/apps-extra:/var/www/html/apps-extra'
+      - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-shared'
       - /var/www/html/data
       - /var/www/html/config
       - ./data/skeleton/:/skeleton
       - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
+      - ./data/shared:/shared
     depends_on:
       - ${PROXY_SERVICE:-proxy}
       - portal
@@ -1021,18 +1139,55 @@ services:
       - host.docker.internal:host-gateway
 
   gs2:
-    image: ghcr.io/juliusknorr/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
     environment:
-      VIRTUAL_HOST: gs2${DOMAIN_SUFFIX}
       SQL: 'mysql'
+      NEXTCLOUD_AUTOINSTALL: ${NEXTCLOUD_AUTOINSTALL:-YES}
+      NEXTCLOUD_AUTOINSTALL_APPS:
+      VIRTUAL_HOST: gs2${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
+      ADDITIONAL_APPS_PATH:
+      NEXTCLOUD_TRUSTED_DOMAINS:
       GS_MODE: slave
     volumes:
-      - '${STABLE_ROOT_PATH}/server:/var/www/html'
-      - '${STABLE_ROOT_PATH}/server/apps-extra:/var/www/html/apps-extra'
+      - '${REPO_PATH_SERVER}:/var/www/html'
+      - '${REPO_PATH_SERVER}/apps-extra:/var/www/html/apps-extra'
+      - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-shared'
       - /var/www/html/data
       - /var/www/html/config
       - ./data/skeleton/:/skeleton
       - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
+      - ./data/shared:/shared
+    depends_on:
+      - ${PROXY_SERVICE:-proxy}
+      - portal
+      - database-${SQL:-mysql}
+      - lookup
+      - redis
+      - mail
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  gs3:
+    image: ghcr.io/nextcloud/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    environment:
+      SQL: 'mysql'
+      NEXTCLOUD_AUTOINSTALL: ${NEXTCLOUD_AUTOINSTALL:-YES}
+      NEXTCLOUD_AUTOINSTALL_APPS:
+      VIRTUAL_HOST: gs3${DOMAIN_SUFFIX}
+      PROTOCOL: ${PROTOCOL:-https}
+      ADDITIONAL_APPS_PATH:
+      NEXTCLOUD_TRUSTED_DOMAINS:
+      GS_MODE: slave
+    volumes:
+      - '${REPO_PATH_SERVER}:/var/www/html'
+      - '${REPO_PATH_SERVER}/apps-extra:/var/www/html/apps-extra'
+      - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-shared'
+      - /var/www/html/data
+      - /var/www/html/config
+      - ./data/skeleton/:/skeleton
+      - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
+      - ./data/shared:/shared
     depends_on:
       - ${PROXY_SERVICE:-proxy}
       - portal
@@ -1044,9 +1199,10 @@ services:
       - host.docker.internal:host-gateway
 
   lookup:
-    image: ghcr.io/juliusknorr/nextcloud-dev-lookupserver:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-lookupserver:latest
     environment:
       VIRTUAL_HOST: "lookup${DOMAIN_SUFFIX}"
+      PROTOCOL: ${PROTOCOL:-https}
     # volumes:
     #  - '${STABLE_ROOT_PATH}/lookupserver:/var/www/html'
     extra_hosts:
@@ -1098,7 +1254,7 @@ services:
       INTERNAL_SHARED_SECRET_KEY: "4567"
 
   talk-janus:
-    image: ghcr.io/juliusknorr/nextcloud-dev-talk-janus:latest
+    image: ghcr.io/nextcloud/nextcloud-dev-talk-janus:latest
 
   talk-recording:
     image: ghcr.io/nextcloud-releases/aio-talk-recording:latest
@@ -1148,6 +1304,72 @@ services:
       - EX_APPS_NET=${EX_APPS_NET:-ipv4@localhost}
       - EX_APPS_COUNT=${EX_APPS_COUNT:-50}
 
+  authentik-postgresql:
+    env_file:
+    - .env
+    environment:
+      POSTGRES_DB: ${PG_DB:-authentik}
+      POSTGRES_PASSWORD: authentik-database
+      POSTGRES_USER: ${PG_USER:-authentik}
+    healthcheck:
+      interval: 30s
+      retries: 5
+      start_period: 20s
+      test:
+      - CMD-SHELL
+      - pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}
+      timeout: 5s
+    image: docker.io/library/postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+    - authentik-database:/var/lib/postgresql/data
+  authentik-worker:
+    command: worker
+    depends_on:
+      authentik-postgresql:
+        condition: service_healthy
+    env_file:
+    - .env
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: authentik-database
+      AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
+      AUTHENTIK_SECRET_KEY: authentik-secret
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.2}
+    restart: unless-stopped
+    user: root
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./authentik-media:/media
+    - ./authentik-certs:/certs
+    - ./authentik-custom-templates:/templates
+    - ./authentik-blueprints:/blueprints/z_custom
+
+  authentik:
+    command: server
+    depends_on:
+      authentik-postgresql:
+        condition: service_healthy
+      authentik-worker:
+        condition: service_healthy
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: authentik-database
+      AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
+      AUTHENTIK_SECRET_KEY: authentik-secret
+      VIRTUAL_HOST: "authentik${DOMAIN_SUFFIX}"
+      VIRTUAL_PORT: 9000
+      PROTOCOL: ${PROTOCOL:-https}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.2}
+    ports:
+      - ${COMPOSE_PORT_HTTP:-9000}:9000
+    restart: unless-stopped
+    volumes:
+    - ./authentik-media:/media
+    - ./authentik-custom-templates:/templates
+    - ./authentik-certs:/certs
 
 volumes:
   data:
@@ -1166,11 +1388,14 @@ volumes:
   document_data:
   document_log:
   objectstorage_minio:
+  objectstorage_rustfs:
   smb:
   smbhomes:
   elasticsearch_data:
   clam:
   mariadb_primary_data:
+  authentik-database:
+    driver: local
 
 networks:
   default:

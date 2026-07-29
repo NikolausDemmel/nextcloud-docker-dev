@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-APPS_TO_INSTALL=(viewer recommendations files_pdfviewer profiler hmr_enabler circles)
+APPS_TO_INSTALL=(viewer recommendations files_pdfviewer profiler hmr_enabler circles globalsiteselector)
 NEXTCLOUD_AUTOINSTALL_APPS=(viewer profiler hmr_enabler)
 SERVER_CLONE=squashed
 APPS_CLONE_FILTER=
@@ -82,7 +82,7 @@ if [ -f ".env" ]; then
 		echo "❌ Repository path does not exist"
 	fi
 
-	for i in stable28 stable29 stable30 stable31 stable32
+	for i in stable30 stable31 stable32 stable33 stable34
 	do
 		echo "Stable $i repository path: ${STABLE_ROOT_PATH}/${i}"
 		STABLE_VERSION=$(grep "OC_VersionString" "${STABLE_ROOT_PATH}/${i}/version.php" | cut -d "'" -f 2)
@@ -295,5 +295,5 @@ cat <<EOF
 
 For more details about the individual setup options see
 the README.md file or checkout the repo at
-https://github.com/juliusknorr/nextcloud-docker-dev
+https://github.com/nextcloud/nextcloud-docker-dev
 EOF

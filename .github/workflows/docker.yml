@@ -15,11 +15,12 @@ jobs:
   push_to_registry:
     name: Build image
     runs-on: ubuntu-latest
-    if: github.repository == 'juliusknorr/nextcloud-docker-dev'
+    if: github.repository == 'nextcloud/nextcloud-docker-dev'
     strategy:
       fail-fast: false
       matrix:
         container:
+          - php85
           - php84
           - php83
           - php82
@@ -33,6 +34,7 @@ jobs:
           - saml
           - nginx
           - elasticsearch
+          - keycloak
           - mailhog
           - ldap
           - lookupserver
@@ -40,25 +42,26 @@ jobs:
           - codedev
           - code
           - talk-janus
+          - noop
     permissions:
       packages: write
       contents: read
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Cache Docker layers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.buildx-cache
           key: ${{ matrix.container }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ matrix.container }}-buildx-
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -72,24 +75,38 @@ jobs:
           DOCKERFILE=$([[ -f "docker/$NAME/Dockerfile" ]] && echo "docker/$NAME/Dockerfile" || echo "docker/Dockerfile.$NAME")
           echo "DOCKERFILE=$DOCKERFILE" >> $GITHUB_OUTPUT
       - name: Build container image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           push: false
           context: docker/
           platforms: linux/amd64,linux/arm64
           file: ${{ steps.dockerfile.outputs.DOCKERFILE }}
           tags: |
-            ghcr.io/juliusknorr/nextcloud-dev-${{ matrix.container }}:${{ github.sha }}
-            ghcr.io/juliusknorr/nextcloud-dev-${{ matrix.container }}:latest
+            ghcr.io/nextcloud/nextcloud-dev-${{ matrix.container }}:${{ github.sha }}
+            ghcr.io/nextcloud/nextcloud-dev-${{ matrix.container }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+      - name: Push container image
+        uses: docker/build-push-action@v7
+        if: github.ref == 'refs/heads/master' || github.event_name == 'release'
+        with:
+          push: true
+          context: docker/
+          platforms: linux/amd64,linux/arm64
+          file: ${{ steps.dockerfile.outputs.DOCKERFILE }}
+          tags: |
+            ghcr.io/nextcloud/nextcloud-dev-${{ matrix.container }}:${{ github.event_name == 'release' && 'release' || 'latest' }}
+            ghcr.io/nextcloud/nextcloud-dev-${{ matrix.container }}:${{ github.ref_name }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
       - name: Start containers with docker compose
+        if: matrix.container == 'php82' || matrix.container == 'php83' || matrix.container == 'php84'
         run: |
           ./bootstrap.sh
           PHP_VERSION=$(echo ${{ matrix.container }} | sed -e 's/^php//')
           echo "PHP_VERSION=${PHP_VERSION}" >> .env
-          # exit if php version is not numeric or below 80
-          if ! [[ $PHP_VERSION =~ ^[0-9]+$ ]] || [[ $PHP_VERSION -lt 80 ]] || [[ $PHP_VERSION -gt 83 ]]; then
+          # exit if php version is not numeric or below 80 or above 84 to only test against supported ones in server master
+          if ! [[ $PHP_VERSION =~ ^[0-9]+$ ]] || [[ $PHP_VERSION -lt 80 ]] || [[ $PHP_VERSION -gt 84 ]]; then
             exit 0
           fi
           docker compose up -d nextcloud
@@ -102,7 +119,7 @@ jobs:
             sleep 1
           done
           curl http://nextcloud.local/status.php
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         if: matrix.container == 'php82' || matrix.container == 'php83' || matrix.container == 'php84'
         with:
           node-version: latest
@@ -118,25 +135,12 @@ jobs:
         if: matrix.container == 'php82' || matrix.container == 'php83' || matrix.container == 'php84'
         working-directory: tests
         run: npx playwright test
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: matrix.container == 'php82' || matrix.container == 'php83' || matrix.container == 'php84'
         with:
           name: playwright-report-${{ matrix.container }}
           path: tests/playwright-report/
           retention-days: 30
-      - name: Push container image
-        uses: docker/build-push-action@v6
-        if: github.ref == 'refs/heads/master' || github.event_name == 'release'
-        with:
-          push: true
-          context: docker/
-          platforms: linux/amd64,linux/arm64
-          file: ${{ steps.dockerfile.outputs.DOCKERFILE }}
-          tags: |
-            ghcr.io/juliusknorr/nextcloud-dev-${{ matrix.container }}:${{ github.event_name == 'release' && 'release' || 'latest' }}
-            ghcr.io/juliusknorr/nextcloud-dev-${{ matrix.container }}:${{ github.ref_name }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
